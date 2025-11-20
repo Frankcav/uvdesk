@@ -1,24 +1,22 @@
-FROM php:8.2-apache
+# Stage 1: Build PHP environment with UVDesk
+FROM php:8.2-fpm AS app
 
-# Install required PHP extensions
+# Install necessary PHP extensions and tools
 RUN apt-get update && apt-get install -y \
-    libicu-dev git unzip libzip-dev \
- && docker-php-ext-install intl pdo_mysql opcache \
- && a2enmod rewrite \
+    libicu-dev zip unzip git curl libzip-dev libxml2-dev libpng-dev locales \
+ && docker-php-ext-install intl pdo_mysql zip opcache \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy project files
-WORKDIR /var/www/html
+# Set working directory
+WORKDIR /var/www/uvdesk
+
+# Copy application files
 COPY . .
 
-# Install dependencies & optimize
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
- && chown -R www-data:www-data var public \
- && php bin/console cache:clear --env=prod --no-debug
-
-# Expose Apache
-EXPOSE 80
-CMD ["apache2-foreground"]
+ && php bin/console cache:clear --env=prod --no-debug \
+ && chown -R www-data:www-data var public
