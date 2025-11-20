@@ -3,8 +3,10 @@ FROM php:8.2-fpm AS app
 
 # Install necessary PHP extensions and tools
 RUN apt-get update && apt-get install -y \
-    libicu-dev zip unzip git curl libzip-dev libxml2-dev libpng-dev locales \
+    libicu-dev libzip-dev unzip git curl libxml2-dev \
  && docker-php-ext-install intl pdo_mysql zip opcache \
+ && pecl install mailparse \
+ && docker-php-ext-enable mailparse \
  && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
